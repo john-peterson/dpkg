@@ -504,7 +504,11 @@ deferred_configure_conffile(struct pkginfo *pkg, struct conffile *conff)
 			        pkg_name(pkg, pnaw_nonambig), cdr_old.buf,
 			        strerror(errno));
 		if (!(what & CFOF_USER_DEL))
+#ifdef __ANDROID__
+			if (rename(cdr.buf, cdr_old.buf))
+#else
 			if (link(cdr.buf, cdr_old.buf))
+#endif
 				warning(_("%s: failed to link '%s' to '%s': %s"),
 				        pkg_name(pkg, pnaw_nonambig),
 				        cdr.buf,
