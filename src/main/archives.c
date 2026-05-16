@@ -418,9 +418,11 @@ tarobject_extract(struct tarcontext *tc, struct tar_entry *te,
 			      namenode->statoverride->uid,
 			      namenode->statoverride->gid,
 			      namenode->statoverride->mode);
+#ifndef __ABDROID__
 		rc = fchown(fd, st->uid, st->gid);
 		if (forcible_nonroot_error(rc))
 			ohshite(_("error setting ownership of '%s'"),
+#endif
 			        te->name);
 		rc = fchmod(fd, st->mode & ~S_IFMT);
 		if (forcible_nonroot_error(rc))
@@ -552,14 +554,18 @@ tarobject_set_perms(struct tar_entry *te, const char *path, struct file_stat *st
 		return;
 
 	if (te->type == TAR_FILETYPE_SYMLINK) {
+#ifndef __ANDROID__
 		rc = lchown(path, st->uid, st->gid);
 		if (forcible_nonroot_error(rc))
 			ohshite(_("error setting ownership of symlink '%s'"),
 			        path);
+#endif
 	} else {
+#ifndef __ANDROID__
 		rc = chown(path, st->uid, st->gid);
 		if (forcible_nonroot_error(rc))
 			ohshite(_("error setting ownership of '%s'"), path);
+#endif
 		rc = chmod(path, st->mode & ~S_IFMT);
 		if (forcible_nonroot_error(rc))
 			ohshite(_("error setting permissions of '%s'"),

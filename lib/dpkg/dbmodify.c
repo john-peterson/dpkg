@@ -332,9 +332,10 @@ modstatdb_open(enum modstatdb_rw readwritereq)
 	switch (readwritereq) {
 	case msdbrw_needsuperuser:
 	case msdbrw_needsuperuserlockonly:
+#ifndef __ANDROID__
 		if (getuid() || geteuid())
 			ohshit(_("requested operation requires superuser privilege"));
-
+#endif
 		/* Fall through. */
 	case msdbrw_write:
 	case msdbrw_writeifposs:
