@@ -459,8 +459,9 @@ tarobject_extract(struct tarcontext *tc, struct tar_entry *te,
 		               namenodetouse(linknode, tc->pkg, &tc->pkg->available)->name);
 		if (linknode->flags & (FNNF_DEFERRED_RENAME | FNNF_NEW_CONFF))
 			varbuf_add_str(&hardlinkfn, DPKGNEWEXT);
-		if (link(hardlinkfn.buf, path))
-			ohshite(_("error creating hard link '%s'"),
+		if (link(hardlinkfn.buf, path)
+				&& symlink(hardlinkfn.buf, path))
+			ohshite(_("error creating link '%s'"),
 			        te->name);
 		namenode->newhash = linknode->newhash;
 		debug(dbg_eachfiledetail,
@@ -596,9 +597,11 @@ tarobject_matches(struct tarcontext *tc,
 		else if (linksize > stab->st_size)
 			ohshit(_("symbolic link '%s' size has changed from %jd to %zd"),
 			       fn_old, (intmax_t)stab->st_size, linksize);
+#ifndef __ANDROID__
 		else if (linksize < stab->st_size)
 			warning(_("symbolic link '%s' size has changed from %jd to %zd"),
 			       fn_old, (intmax_t)stab->st_size, linksize);
+#endif
 		linkmatch = strcmp(linkname.buf, te->linkname) == 0;
 		varbuf_destroy(&linkname);
 		if (linkmatch)
@@ -1145,9 +1148,11 @@ tarobject(struct tar_archive *tar, struct tar_entry *ti)
 			else if (linksize > stab.st_size)
 				ohshit(_("symbolic link '%s' size has changed from %jd to %zd"),
 				       fnamevb.buf, (intmax_t)stab.st_size, linksize);
+#ifndef __ANDROID__
 			else if (linksize < stab.st_size)
 				warning(_("symbolic link '%s' size has changed from %jd to %zd"),
 				       fnamevb.buf, (intmax_t)stab.st_size, linksize);
+#endif
 			if (symlink(symlinkfn.buf, fnametmpvb.buf))
 				ohshite(_("unable to make backup symlink for '%s'"),
 				        ti->name);
@@ -1159,7 +1164,8 @@ tarobject(struct tar_archive *tar, struct tar_entry *ti)
 			                         stab.st_mode);
 		} else {
 			debug(dbg_eachfiledetail, "tarobject nondirectory, 'link' backup");
-			if (link(fnamevb.buf, fnametmpvb.buf))
+			if (link(fnamevb.buf, fnametmpvb.buf)
+					&& rename(fnamevb.buf, fnametmpvb.buf))
 				ohshite(_("unable to make backup link of '%s' before installing new version"),
 				        ti->name);
 		}

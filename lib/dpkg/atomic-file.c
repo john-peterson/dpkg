@@ -98,8 +98,11 @@ atomic_file_backup(struct atomic_file *file)
 
 	if (unlink(name_old) && errno != ENOENT)
 		ohshite(_("error removing old backup file '%s'"), name_old);
-	if (link(file->name, name_old) && errno != ENOENT)
-		ohshite(_("error creating new backup file '%s'"), name_old);
+	if (link(file->name, name_old)
+		&& rename(file->name, name_old)
+		&& errno != ENOENT)
+			ohshite(_("error creating new backup file '%s'"), name_old);
+	}
 
 	free(name_old);
 }
